@@ -1,5 +1,5 @@
 // Địa chỉ backend — đổi lại nếu bạn deploy backend ở nơi khác
-const API_BASE = 'http://localhost:4000/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
 
 function getToken() {
   return localStorage.getItem('roomflow_token');
