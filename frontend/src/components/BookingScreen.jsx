@@ -3,18 +3,27 @@ import { api } from '../api';
 
 const EQUIPMENT_OPTIONS = ['Máy chiếu', 'TV màn hình', 'Micro', 'Bảng trắng', 'Hệ thống âm thanh'];
 
-function toLocalInputValue(isoString) {
+function toLocalDateValue(isoString) {
   if (!isoString) return '';
   const d = new Date(isoString);
   const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function toLocalTimeValue(isoString) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export default function BookingScreen({ rooms, editingMeeting, onSaved, onCancelEdit, currentUser }) {
   const [title, setTitle] = useState('');
   const [roomId, setRoomId] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [startTimeOnly, setStartTimeOnly] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [endTimeOnly, setEndTimeOnly] = useState('');
   const [attendeeInput, setAttendeeInput] = useState('');
   const [attendees, setAttendees] = useState([]);
   const [equipment, setEquipment] = useState([]);
@@ -30,8 +39,10 @@ export default function BookingScreen({ rooms, editingMeeting, onSaved, onCancel
     if (editingMeeting) {
       setTitle(editingMeeting.title);
       setRoomId(String(editingMeeting.room_id));
-      setStartTime(toLocalInputValue(editingMeeting.start_time));
-      setEndTime(toLocalInputValue(editingMeeting.end_time));
+      setStartDate(toLocalDateValue(editingMeeting.start_time));
+      setStartTimeOnly(toLocalTimeValue(editingMeeting.start_time));
+      setEndDate(toLocalDateValue(editingMeeting.end_time));
+      setEndTimeOnly(toLocalTimeValue(editingMeeting.end_time));
       setAttendees(editingMeeting.attendees || []);
       setEquipment(editingMeeting.equipment || []);
       setDescription(editingMeeting.description || '');
@@ -43,8 +54,10 @@ export default function BookingScreen({ rooms, editingMeeting, onSaved, onCancel
   function resetForm() {
     setTitle('');
     setRoomId('');
-    setStartTime('');
-    setEndTime('');
+    setStartDate('');
+    setStartTimeOnly('');
+    setEndDate('');
+    setEndTimeOnly('');
     setAttendees([]);
     setAttendeeInput('');
     setEquipment([]);
@@ -79,10 +92,13 @@ export default function BookingScreen({ rooms, editingMeeting, onSaved, onCancel
     setError('');
     setSuccess('');
 
-    if (!title.trim() || !roomId || !startTime || !endTime) {
-      setError('Vui lòng điền đầy đủ tên cuộc họp, phòng, giờ bắt đầu và kết thúc.');
+    if (!title.trim() || !roomId || !startDate || !startTimeOnly || !endDate || !endTimeOnly) {
+      setError('Vui lòng điền đầy đủ tên cuộc họp, phòng, ngày/giờ bắt đầu và kết thúc.');
       return;
     }
+
+    const startTime = `${startDate}T${startTimeOnly}`;
+    const endTime = `${endDate}T${endTimeOnly}`;
 
     const payload = {
       title: title.trim(),
@@ -159,21 +175,49 @@ export default function BookingScreen({ rooms, editingMeeting, onSaved, onCancel
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Bắt đầu *</label>
-            <input
-              type="datetime-local"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-            />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+                <p className="text-xs text-gray-400 mt-0.5">Ngày / Tháng / Năm</p>
+              </div>
+              <div>
+                <input
+                  type="time"
+                  value={startTimeOnly}
+                  onChange={(e) => setStartTimeOnly(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+                <p className="text-xs text-gray-400 mt-0.5">Giờ : Phút</p>
+              </div>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Kết thúc *</label>
-            <input
-              type="datetime-local"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-            />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+                <p className="text-xs text-gray-400 mt-0.5">Ngày / Tháng / Năm</p>
+              </div>
+              <div>
+                <input
+                  type="time"
+                  value={endTimeOnly}
+                  onChange={(e) => setEndTimeOnly(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+                <p className="text-xs text-gray-400 mt-0.5">Giờ : Phút</p>
+              </div>
+            </div>
           </div>
         </div>
 
